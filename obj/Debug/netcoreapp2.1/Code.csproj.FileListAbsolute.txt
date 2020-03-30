@@ -1,0 +1,11 @@
+C:\Users\davea\Desktop\projet_secu\Code\bin\Debug\netcoreapp2.1\Code.deps.json
+C:\Users\davea\Desktop\projet_secu\Code\bin\Debug\netcoreapp2.1\Code.runtimeconfig.json
+C:\Users\davea\Desktop\projet_secu\Code\bin\Debug\netcoreapp2.1\Code.runtimeconfig.dev.json
+C:\Users\davea\Desktop\projet_secu\Code\bin\Debug\netcoreapp2.1\Code.dll
+C:\Users\davea\Desktop\projet_secu\Code\bin\Debug\netcoreapp2.1\Code.pdb
+C:\Users\davea\Desktop\projet_secu\Code\obj\Debug\netcoreapp2.1\Code.csprojAssemblyReference.cache
+C:\Users\davea\Desktop\projet_secu\Code\obj\Debug\netcoreapp2.1\Code.csproj.CoreCompileInputs.cache
+C:\Users\davea\Desktop\projet_secu\Code\obj\Debug\netcoreapp2.1\Code.AssemblyInfoInputs.cache
+C:\Users\davea\Desktop\projet_secu\Code\obj\Debug\netcoreapp2.1\Code.AssemblyInfo.cs
+C:\Users\davea\Desktop\projet_secu\Code\obj\Debug\netcoreapp2.1\Code.dll
+C:\Users\davea\Desktop\projet_secu\Code\obj\Debug\netcoreapp2.1\Code.pdb
