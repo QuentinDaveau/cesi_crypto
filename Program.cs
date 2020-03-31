@@ -6,6 +6,11 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Threading;
 
+/*
+Code développé en suivant rigoureusement la méthode de la R.A.C.H.E. conformément à la norme ISO 1664:
+https://www.la-rache.com/
+*/
+
 namespace Code
 {
     public delegate void KeyFoundCallback(byte[] key, int score);
@@ -14,6 +19,16 @@ namespace Code
     {
         // Avec une clé de 6 caractères max alpha minuscules, on peut monter jusqu'à 300 millions de clés à tester (26 ^ 6)
         static void Main()
+        {
+            // SearchKey();
+
+            foreach(char c in "ABCDEFGHIJK")
+            {
+                FileDecrypt.DecryptFile("crypted/P"+c+".txt", "decrypted/P"+c+".txt", "buoxmh");
+            }
+        }
+
+        private static void SearchKey()
         {
             KeyGen KeyGen = new KeyGen(new int[]{-1, -1, -1, -1, -1, -1});
 
@@ -220,6 +235,16 @@ namespace Code
                     keys[i] = null;
                 }
             }
+        }
+    }
+
+
+    class FileDecrypt
+    {
+        public static void DecryptFile(string filePath, string savePath, string key)
+        {
+            Decryptor decryptor = new Decryptor(FileManager.GetFileBytes(filePath));
+            File.WriteAllBytes(savePath, decryptor.DecryptWithKey(Encoding.UTF8.GetBytes(key)));
         }
     }
 }
