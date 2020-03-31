@@ -15,34 +15,46 @@ namespace Code
 {
     public delegate void KeyFoundCallback(byte[] key, int score);
 
+    // Programme principal
+
     class Program
     {
         // Avec une clé de 6 caractères max alpha minuscules, on peut monter jusqu'à 300 millions de clés à tester (26 ^ 6)
+        // Fonction principale (appelée au démarrage)
         static void Main()
         {
-            // SearchKey();
+            // Fonction de recherche de la clé
+            SearchKey();
 
-            foreach(char c in "ABCDEFGHIJK")
-            {
-                FileDecrypt.DecryptFile("crypted/P"+c+".txt", "decrypted/P"+c+".txt", "buoxmh");
-            }
+            // Bout de code pour décrypter les fichiers
+            // foreach(char c in "ABCDEFGHIJK")
+            // {
+            //     FileDecrypt.DecryptFile("crypted/P"+c+".txt", "decrypted/P"+c+".txt", "buoxmh");
+            // }
         }
 
+        // Fonction principale de recherche de la clé
         private static void SearchKey()
         {
+            // Création d'un KeyGen. On initialise le point de départ de génération de la clé à 0
             KeyGen KeyGen = new KeyGen(new int[]{-1, -1, -1, -1, -1, -1});
 
+            // Récupération du texte contenu dans le premier fichier. Initialisation d'un Decryptor à partir du premier fichier.
             string sampleFilePath = "crypted/PA.txt";
             Decryptor decryptor = new Decryptor(FileManager.GetFileBytes(sampleFilePath));
 
+            // Chargement du dictionnaire et division de celui-ci en sous-dictionnaires pour accélérer la vitesse de recherche
             string dictionaryPath = "dict/liste_francais.txt";
             string[][] dividedDict = DivideDict(File.ReadAllLines(dictionaryPath));
 
             Stopwatch stopWatch = new Stopwatch();
             stopWatch.Start();
 
-            int batchLength = 100000;
+            // Création d'un DictChecker
             DictChecker dictChecker = new DictChecker(dividedDict, new KeyFoundCallback(ResultCallback));
+
+            // Création de batchs et lancement de threads qui analyseront les batchs en question
+            int batchLength = 100000;
 
             for (int i = 0; i < 1000; i++)
             {
@@ -51,6 +63,7 @@ namespace Code
 
                 for (int j = 0; j < batchLength; j++)
                 {
+                    // Génération des textes décryptés et stockage dans un batch
                     byte[] key = KeyGen.GenerageKey();
                     string tempString = Encoding.UTF8.GetString(decryptor.DecryptWithKey(key));
                     batchCheck[j] = tempString.Substring(0, (int)(tempString.Length / 2));
@@ -62,6 +75,7 @@ namespace Code
                     Console.WriteLine("New checker! "+i+", key: "+KeyGen.GetKey());
                 }
                 
+                // Lancement d'un nouveau thread qui analysera le nouveau batch
                 Thread t = new Thread(dictChecker.CheckDecodedText);
                 t.Start(new List<object>(){batchCheck, keyList});
             }
@@ -70,6 +84,9 @@ namespace Code
             Console.WriteLine(stopWatch.Elapsed);
         }
 
+        // Fonction de division du dictionnaire. Divise le dictionnaire en 26 * 26 dictionnaires contenant  chacun
+        // tous les mots commencant par une combinaison unique de deux lettres de l'alphabet. A pour objectif de réduire
+        // la quantité de mots à comparer en ne recherchant que dans le dictionnaire concerné
         private static string[][] DivideDict(string[] dict)
         {
             string letters = "abcdefghijklmnopqrstuvwxyz";
@@ -85,6 +102,7 @@ namespace Code
             return dividedDict;
         }
 
+        // Fonction de callback pouvant être appelée par les threads
         public static void ResultCallback(byte[] key, int score) 
         {
             // Console.WriteLine("Key: " + Encoding.UTF8.GetString(key) + ", score:" + score);
@@ -92,20 +110,26 @@ namespace Code
     }
 
     
+    // Classe de génération des clés
     class KeyGen
     {
         private static string keyCharacters = "abcdefghijklmnopqrstuvwxyz";
 
-        // Pour maximiser les perfs on passe directement par un array (dirty) plutôt que faire un modulo ou autre calcul mathématique
+        // KeyIncrement: compteur qui va définir la nouvelle clé à générer. Array de 6 int. Chaque int représente une lettre de l'alphabet (-1 = rien)
+        // On incrémente à chaque fois le premier int. Si il vaut 26 (= z + 1), on le repasse à "a", et on incrémente le int suivant de 1.
+        // {0, -1, -1, -1, -1, -1} = "a", {5, 2, 1, -1, -1, -1} = "fcb"...
+        // Pour maximiser les perfs on passe directement par un array (dirty) plutôt que faire un modulo ou autre calcul mathématique.
         private int[] keyIncrement = new int[]{-1, -1, -1, -1, -1, -1};
 
         private string key = string.Empty;
 
+        // A la création de la classe, il faut préciser la valeur de départ désitée
         public KeyGen(int[] startValue)
         {
             keyIncrement = startValue;
         }
 
+        // Retourne la clé actuelle sous forme de string
         public string GetKey()
         {
             string returnString = "";
@@ -113,6 +137,7 @@ namespace Code
             return returnString;
         }
 
+        // Génère une nouvelle clé. Incrémente la liste de 1, convertis les int en lettre de l'alphabet et retourne une liste binaire (la clé)
         public byte[] GenerageKey()
         {
             keyIncrement[0] += 1;
@@ -142,14 +167,10 @@ namespace Code
 
             return Encoding.UTF8.GetBytes(key);
         }
-
-        public void ResetKey()
-        {
-            keyIncrement = new int[]{0, -1, -1, -1, -1, -1};
-        }
     }
 
 
+    // Classe dédiée au chargement des fichiers
     class FileManager
     {
         public static byte[] GetFileBytes(string path)
@@ -166,16 +187,20 @@ namespace Code
     }
 
 
+    // Classe de décryption du texte (sous forme de bytes) à parir d'une clé. Elle applique un XOR.
     class Decryptor
     {
         private byte[] bytesToDecrypt;
         private int byteLength;
+
+        // Définition du texte à décrypter à l'initialisation de la classe
         public Decryptor(byte[] bytesToDecrypt)
         {
             this.bytesToDecrypt = bytesToDecrypt;
             byteLength = bytesToDecrypt.Length;
         }
 
+        // Décryptage du texte en utilisant la clé donnée.
         public byte[] DecryptWithKey(byte[] key)
         {
             byte[] result = new byte[byteLength];
@@ -191,6 +216,7 @@ namespace Code
     }
 
 
+    // Classe de comparaison du texte avec le dictionnaire afin de retourner un score de lisibilité
     class DictChecker
     {
         private string[][] dicts;
@@ -198,12 +224,16 @@ namespace Code
         private KeyFoundCallback callback;
         private string letters = "abcdefghijklmnopqrstuvwxyz";
 
+        // A l'initialisation, chargement des dictionnaires et de la fonction de retour (pour le multithreading)
         public DictChecker(string[][] dicts, KeyFoundCallback callbackDelegate)
         {
             this.dicts = dicts;
             this.callback = callbackDelegate;
         }
 
+        // Comparaison d'un batch de texts avec le dictionnaire. Pour chaque text présent dans le batch,
+        // récupération des mots présent dans le texte (toute chaîne de caractères encadrée d'espaces) et recherche de ceux-ci
+        // dans le dictionnaire. Si le mot est trouvé, le score du texte augmente de la longeur du mot.
         public void CheckDecodedText(object properties)
         {
             string[] texts = (string[])((List<object>)properties)[0];
@@ -223,10 +253,13 @@ namespace Code
                     }
                 }
 
+                // Nettoyage de l'entrée du texte qui vient d'être testé pour libérer de la mémoire
                 texts[i] = null;
 
+                // Si score suffisamment élevé
                 if (score >= threshold)
                 {
+                    // Retourne les valeurs par le biais du callback, ou bien les affiche directement dans la console
                     // callback(keys[i], count);
                     Console.WriteLine("Key: " + Encoding.UTF8.GetString(keys[i]) + ", score:" + score);
                 }
@@ -239,6 +272,7 @@ namespace Code
     }
 
 
+    // Simple classe de décryptage des fichiers. Charge un fichier, le décrypte et enregistre le résultat au path donné
     class FileDecrypt
     {
         public static void DecryptFile(string filePath, string savePath, string key)
